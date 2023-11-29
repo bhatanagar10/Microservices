@@ -1,0 +1,58 @@
+version: '3.9'
+
+services:
+  eurekaMS:
+    image: eurekams:latest
+    ports:
+      - 8010:8010
+    networks:
+      - user-network
+    environment:
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin-server:9411/api/v2/spans
+
+  userMS:
+    image: userms:latest
+    ports:
+      - 8080:8080
+    networks:
+      - user-network
+    depends_on:
+      - eurekaMS
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaMS:8010/eureka
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin-server:9411/api/v2/spans
+
+  accountMS:
+    image: accountms:latest
+    ports:
+      - 8090:8090
+    networks:
+      - user-network
+    depends_on:
+      - eurekaMS
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaMS:8010/eureka
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin-server:9411/api/v2/spans
+
+  api-gateway:
+    image: api-gateway:latest
+    ports:
+      - 8030:8030
+    networks:
+      - user-network
+    depends_on:
+      - eurekaMS
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaMS:8010/eureka
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin-server:9411/api/v2/spans
+
+  zipkin-server:
+    image: openzipkin/zipkin:latest
+    ports:
+      - 9411:9411
+    networks:
+      - user-network
+
+
+networks:
+  user-network:
